@@ -75,7 +75,7 @@ class RefreshListViewHomeDataPresenter extends RefreshListViewDataPresenter {
 
   @override
   Future<RefreshListItemDataEntity> fetchDataEntity() {
-    /// mock data
+    /// mocked data
     return Future.delayed(Duration(seconds: 2)).then((_) {
       List titles = [];
       for (int i = 0; i < pageSize; i++) {

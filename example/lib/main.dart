@@ -75,14 +75,16 @@ class RefreshListViewHomeDataPresenter extends RefreshListViewDataPresenter {
 
   @override
   Future<RefreshListItemDataEntity> fetchDataEntity() {
-    /// mock data
+    /// mocked data
     return Future.delayed(Duration(seconds: 2)).then((_) {
       List titles = [];
-      for (int i = 0; i < pageSize; i++) {
+      var count = Random().nextBool() ? pageSize : (pageSize - 1);
+      for (int i = 0; i < count; i++) {
         titles.add(WordPair.random().asPascalCase);
       }
       return titles;
     }).then((_) {
+      /// 随机模拟数据
       return RefreshListItemDataEntity()
         ..success = Random().nextBool()
         ..entityList = _;

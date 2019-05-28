@@ -1,4 +1,4 @@
-# refresh_list_view
+# auto_refresh_list_view
 
 功能完善的列表刷新组件,使用MVP设计模式.
 
@@ -18,17 +18,15 @@ dependencies:
 
 ### 介绍
 
-采用MVP设计模式,将RefreshListView最大限度进行解耦,由3个Presenter组成,将数据处理、item的展示、状态视图展示分别由不同Presenter提供.
+采用MVP设计模式,将AutoRefreshListView最大限度进行解耦.由3个Presenter组成,将数据处理、item的展示、状态视图展示分别由不同Presenter提供.
 
 ```dart
-new QRefreshListView(
+new AutoRefreshListView(
       itemPresenter: _itemPresenter,
       dataPresenter: _dataPresenter,
       stateViewPresenter: _stateViewPresenter,
     )
 ```
-
-
 
 #### dataPresenter
 
@@ -42,15 +40,15 @@ new QRefreshListView(
 
 负责创建ListView的item、header、footer、sectionHeader、sectionFooter等.一般情况下会持有dataPresenter,因为视图的展示基本上都需要由数据来驱动.
 
+### 效果图
 
-<img src="https://upload-images.jianshu.io/upload_images/3537150-8d7b9f810364f4d9.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" height="420" width="240">
-<img src="https://upload-images.jianshu.io/upload_images/3537150-fc15703bd57ca975.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" height="420" width="240">
-<img src="https://upload-images.jianshu.io/upload_images/3537150-341d4a32473bb4c7.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" height="420" width="240">
-<img src="https://upload-images.jianshu.io/upload_images/3537150-d9f1064b7413868f.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" height="420" width="240">
-<img src="https://upload-images.jianshu.io/upload_images/3537150-c5d7bc017671d351.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" height="420" width="240">
-<img src="https://upload-images.jianshu.io/upload_images/3537150-660c4767b79919ec.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" height="420" width="240">
-
-
+<img src="https://upload-images.jianshu.io/upload_images/3537150-ddc9f449b5052a76.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" height="420" width="240">
+<img src="https://upload-images.jianshu.io/upload_images/3537150-db6f72a6699f3372.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" height="420" width="240">
+<img src="https://upload-images.jianshu.io/upload_images/3537150-f15473dd624b000a.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" height="420" width="240">
+<img src="https://upload-images.jianshu.io/upload_images/3537150-d8fddcaa1a1cd4a8.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" height="420" width="240">
+<img src="https://upload-images.jianshu.io/upload_images/3537150-a5c4566cb203bca4.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" height="420" width="240">
+<img src="https://upload-images.jianshu.io/upload_images/3537150-632e6adc8d9e796e.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" height="420" width="240">
+<img src="https://upload-images.jianshu.io/upload_images/3537150-2f5bdb0f5c052128.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" height="420" width="240">
 
 ### 使用
 
@@ -111,10 +109,11 @@ class RefreshListViewHomeDataPresenter extends RefreshListViewDataPresenter {
 
   @override
   Future<RefreshListItemDataEntity> fetchDataEntity() {
-    /// mock data
+    /// mocked data
     return Future.delayed(Duration(seconds: 2)).then((_) {
       List titles = [];
-      for (int i = 0; i < 0; i++) {
+      var count = Random().nextBool() ? pageSize : (pageSize - 1);
+      for (int i = 0; i < count; i++) {
         titles.add(WordPair.random().asPascalCase);
       }
       return titles;
@@ -161,9 +160,7 @@ class RefreshListViewHomeItemPresenter extends RefreshListViewItemIPresenter {
 ```
 
 
-
 #### RefreshListStateViewPresenter
-
 
 
 ```dart
