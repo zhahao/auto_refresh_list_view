@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:refresh_list_view/refresh_list_view.dart';
+import 'package:auto_refresh_list_view/auto_refresh_list_view.dart';
 import 'dart:async';
 import 'dart:math';
 import 'package:english_words/english_words.dart';
@@ -10,11 +10,11 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'example_refresh_list_view',
+      title: 'example_auto_refresh_list_view',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: MyHomePage(title: 'example_refresh_list_view'),
+      home: MyHomePage(title: 'example_auto_refresh_list_view'),
     );
   }
 }
@@ -34,12 +34,21 @@ class _MyHomePageState extends State<MyHomePage> {
   RefreshListViewHomeDataPresenter();
   RefreshListHomeStateViewPresenter _stateViewPresenter =
   RefreshListHomeStateViewPresenter();
-  QRefreshListViewController _listViewController = QRefreshListViewController();
+  AutoRefreshListViewController _listViewController = AutoRefreshListViewController();
 
   @override
   void initState() {
     super.initState();
     _itemPresenter = RefreshListViewHomeItemPresenter(_dataPresenter);
+  }
+
+  Widget _buildListView() {
+    return AutoRefreshListView(
+      itemPresenter: _itemPresenter,
+      dataPresenter: _dataPresenter,
+      stateViewPresenter: _stateViewPresenter,
+      controller: _listViewController,
+    );
   }
 
   @override
@@ -58,14 +67,6 @@ class _MyHomePageState extends State<MyHomePage> {
       body: _buildListView(),
     );
   }
-
-  Widget _buildListView() {
-    return QRefreshListView(
-      itemPresenter: _itemPresenter,
-      dataPresenter: _dataPresenter,
-      stateViewPresenter: _stateViewPresenter,
-    );
-  }
 }
 
 class RefreshListViewHomeDataPresenter extends RefreshListViewDataPresenter {
@@ -82,9 +83,8 @@ class RefreshListViewHomeDataPresenter extends RefreshListViewDataPresenter {
       }
       return titles;
     }).then((_) {
-      int random = Random().nextInt(3);
       return RefreshListItemDataEntity()
-        ..success = random == 1
+        ..success = Random().nextBool()
         ..entityList = _;
     });
   }

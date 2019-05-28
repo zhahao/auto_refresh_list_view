@@ -5,7 +5,7 @@ import 'data_presenter.dart';
 import 'item_presenter.dart';
 import 'state_view_presenter.dart';
 
-class QRefreshListViewController {
+class AutoRefreshListViewController {
   /// 开始重新刷新列表
   void beginRefresh() {
     if (_beginRefreshCallback != null) {
@@ -13,10 +13,15 @@ class QRefreshListViewController {
     }
   }
 
+  /// listView的控制器
+  ScrollController get scrollController => _scrollController;
+
   VoidCallback _beginRefreshCallback;
+
+  ScrollController _scrollController;
 }
 
-class QRefreshListView extends StatefulWidget {
+class AutoRefreshListView extends StatefulWidget {
   /// item的Presenter,默认null
   /// 负责ListView的item构建.
   final RefreshListViewItemIPresenter itemPresenter;
@@ -43,9 +48,9 @@ class QRefreshListView extends StatefulWidget {
   final EdgeInsetsGeometry padding;
 
   /// 控制器,用来操作内部listView
-  final QRefreshListViewController controller;
+  final AutoRefreshListViewController controller;
 
-  QRefreshListView(
+  AutoRefreshListView(
       {Key key,
       @required this.itemPresenter,
       @required this.dataPresenter,
@@ -65,10 +70,10 @@ class QRefreshListView extends StatefulWidget {
         super(key: key);
 
   @override
-  _QRefreshListView createState() => _QRefreshListView();
+  _AutoRefreshListView createState() => _AutoRefreshListView();
 }
 
-class _QRefreshListView extends State<QRefreshListView> {
+class _AutoRefreshListView extends State<AutoRefreshListView> {
   _RefreshListState _state;
   ScrollController _listScrollController = ScrollController();
   bool _loadingMoreFlag = false;
@@ -88,6 +93,7 @@ class _QRefreshListView extends State<QRefreshListView> {
     if (mounted) {
       if (widget.controller != null) {
         widget.controller._beginRefreshCallback = _refreshList;
+        widget.controller._scrollController = _listScrollController;
       }
     }
   }
@@ -153,9 +159,9 @@ class _QRefreshListView extends State<QRefreshListView> {
     _loadingMoreFlag = true;
 
     if (firstLoad) {
-      widget.dataPresenter.resetData();
+      widget.dataPresenter.resetPage();
     } else {
-      widget.dataPresenter.increaseData();
+      widget.dataPresenter.nextPage();
     }
 
     RefreshListItemDataEntity data =
@@ -188,7 +194,7 @@ class _QRefreshListView extends State<QRefreshListView> {
         if (firstLoad) {
           _state = _RefreshListState.errorOnLoadFirstPage;
         } else {
-          widget.dataPresenter.reduceData();
+          widget.dataPresenter.previousPage();
           _state = _RefreshListState.errorOnLoadMoreData;
         }
       }

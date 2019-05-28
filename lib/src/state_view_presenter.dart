@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 /// listView的各种状态view的Presenter,可继承,可with.
@@ -41,24 +42,15 @@ class RefreshListStateViewPresenter implements RefreshListStateViewIPresenter {
   /// 正在加载数据
   @override
   Widget loadingView() {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
+    return Container(
+      color: Colors.white,
       child: Center(
-          child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: <Widget>[
-          CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation(themeColor)),
-          SizedBox(height: 20.0),
-          Text(
-            '正在加载数据...',
-            style: TextStyle(fontSize: 14.0),
-          )
-        ],
-      )
-          //child:
-          ),
+        child: CupertinoActivityIndicator(
+          animating: true,
+          radius: 20,
+        ),
+        //child:
+      ),
     );
   }
 
@@ -112,12 +104,9 @@ class RefreshListStateViewPresenter implements RefreshListStateViewIPresenter {
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: <Widget>[
-          SizedBox(
-            width: 30,
-            height: 30,
-            child: CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation(Color(0xFF1ECDB9)),
-            ),
+          CupertinoActivityIndicator(
+            animating: true,
+            radius: 10,
           ),
           SizedBox(width: 16.0),
           Text(

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:refresh_list_view/refresh_list_view.dart';
+import 'package:auto_refresh_list_view/auto_refresh_list_view.dart';
 import 'dart:async';
 import 'dart:math';
 import 'package:english_words/english_words.dart';
@@ -10,11 +10,11 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'example_refresh_list_view',
+      title: 'example_auto_refresh_list_view',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: MyHomePage(title: 'example_refresh_list_view'),
+      home: MyHomePage(title: 'example_auto_refresh_list_view'),
     );
   }
 }
@@ -34,7 +34,7 @@ class _MyHomePageState extends State<MyHomePage> {
       RefreshListViewHomeDataPresenter();
   RefreshListHomeStateViewPresenter _stateViewPresenter =
       RefreshListHomeStateViewPresenter();
-  QRefreshListViewController _listViewController = QRefreshListViewController();
+  AutoRefreshListViewController _listViewController = AutoRefreshListViewController();
 
   @override
   void initState() {
@@ -42,12 +42,12 @@ class _MyHomePageState extends State<MyHomePage> {
     _itemPresenter = RefreshListViewHomeItemPresenter(_dataPresenter);
   }
 
-
   Widget _buildListView() {
-    return QRefreshListView(
+    return AutoRefreshListView(
       itemPresenter: _itemPresenter,
       dataPresenter: _dataPresenter,
       stateViewPresenter: _stateViewPresenter,
+      controller: _listViewController,
     );
   }
 
@@ -67,7 +67,6 @@ class _MyHomePageState extends State<MyHomePage> {
       body: _buildListView(),
     );
   }
-
 }
 
 class RefreshListViewHomeDataPresenter extends RefreshListViewDataPresenter {
@@ -79,7 +78,7 @@ class RefreshListViewHomeDataPresenter extends RefreshListViewDataPresenter {
     /// mock data
     return Future.delayed(Duration(seconds: 2)).then((_) {
       List titles = [];
-      for (int i = 0; i < 0; i++) {
+      for (int i = 0; i < pageSize; i++) {
         titles.add(WordPair.random().asPascalCase);
       }
       return titles;

@@ -11,7 +11,7 @@
 
 ```
 dependencies:
-  refresh_list_view: <latest version>
+  auto_refresh_list_view: <latest version>
 ```
 
 

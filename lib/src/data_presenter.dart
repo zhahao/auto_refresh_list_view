@@ -30,19 +30,19 @@ abstract class RefreshListViewDataIPresenter {
   /// 是否没有更多数据,每次fetchDataEntity成功之后
   bool isNoMoreData(RefreshListItemDataEntity fetchedData);
 
-  /// 重置数据,比如将单页面pageNum=1
-  void resetData();
+  /// 重置页码,比如将单页面pageNum=1
+  void resetPage();
 
-  /// 增加数据,比如pageNum++
-  void increaseData();
+  /// 下一页,比如pageNum++
+  void nextPage();
 
-  /// 减少数据,比如pageNum--
-  void reduceData();
+  /// 上一页,比如pageNum--
+  void previousPage();
 }
 
 
 /// 默认的dataPresenter
-class RefreshListViewDataPresenter<T> implements RefreshListViewDataIPresenter {
+class RefreshListViewDataPresenter implements RefreshListViewDataIPresenter {
   int pageSize = 20;
 
   int pageNum = 1;
@@ -78,11 +78,11 @@ class RefreshListViewDataPresenter<T> implements RefreshListViewDataIPresenter {
           fetchedData.entityList.length < pageSize;
 
   @override
-  void resetData() => pageNum = 1;
+  void resetPage() => pageNum = 1;
 
   @override
-  void increaseData() => pageNum++;
+  void nextPage() => pageNum++;
 
   @override
-  void reduceData() => pageNum--;
+  void previousPage() => pageNum--;
 }
