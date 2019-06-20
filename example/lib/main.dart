@@ -48,6 +48,7 @@ class _MyHomePageState extends State<MyHomePage> {
       dataPresenter: _dataPresenter,
       stateViewPresenter: _stateViewPresenter,
       controller: _listViewController,
+      refreshIndicatorColor: Colors.red,
     );
   }
 

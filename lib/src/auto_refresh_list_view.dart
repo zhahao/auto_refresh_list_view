@@ -6,10 +6,17 @@ import 'item_presenter.dart';
 import 'state_view_presenter.dart';
 
 class AutoRefreshListViewController {
-  /// 开始重新刷新列表
+  /// 开始重新加载数据并刷新列表
   void beginRefresh() {
     if (_beginRefreshCallback != null) {
       _beginRefreshCallback();
+    }
+  }
+
+  /// 不重新获取数据,只刷新当前数据的列表
+  void reloadData() {
+    if (_reloadDataCallback != null) {
+      _reloadDataCallback();
     }
   }
 
@@ -17,7 +24,7 @@ class AutoRefreshListViewController {
   ScrollController get scrollController => _scrollController;
 
   VoidCallback _beginRefreshCallback;
-
+  VoidCallback _reloadDataCallback;
   ScrollController _scrollController;
 }
 
@@ -41,7 +48,7 @@ class AutoRefreshListView extends StatefulWidget {
   /// 是否提供上拉加载操作,默认true.
   final bool canPullUp;
 
-  /// 构建完成是否立即刷新,默认true
+  /// 初始化完成是否立即刷新,默认true
   final bool immediateRefresh;
 
   /// listView的padding,默认zero
@@ -50,21 +57,29 @@ class AutoRefreshListView extends StatefulWidget {
   /// 控制器,用来操作内部listView
   final AutoRefreshListViewController controller;
 
-  AutoRefreshListView(
-      {Key key,
-      @required this.itemPresenter,
-      @required this.dataPresenter,
-      this.controller,
-      bool canPullDown,
-      bool canPullUp,
-      bool immediateRefresh,
-      RefreshListStateViewIPresenter stateViewPresenter,
-      EdgeInsetsGeometry padding})
-      : assert(itemPresenter != null && dataPresenter != null),
+  /// [RefreshIndicator.color]属性
+  final Color refreshIndicatorColor;
+
+  /// [RefreshIndicator.backgroundColor]属性
+  final Color refreshIndicatorBackgroundColor;
+
+  AutoRefreshListView({
+    Key key,
+    @required this.itemPresenter,
+    @required this.dataPresenter,
+    @required this.stateViewPresenter,
+    this.controller,
+    this.refreshIndicatorColor,
+    this.refreshIndicatorBackgroundColor,
+    bool canPullDown,
+    bool canPullUp,
+    bool immediateRefresh,
+    EdgeInsetsGeometry padding,
+  })  : assert(itemPresenter != null &&
+            dataPresenter != null &&
+            stateViewPresenter != null),
         canPullDown = canPullDown ?? true,
         canPullUp = canPullUp ?? true,
-        stateViewPresenter =
-            stateViewPresenter ?? RefreshListStateViewPresenter(),
         immediateRefresh = immediateRefresh ?? true,
         padding = padding ?? EdgeInsets.zero,
         super(key: key);
@@ -74,27 +89,63 @@ class AutoRefreshListView extends StatefulWidget {
 }
 
 class _AutoRefreshListView extends State<AutoRefreshListView> {
-  _RefreshListState _state;
+  _AutoRefreshListViewState _state;
   ScrollController _listScrollController = ScrollController();
   bool _loadingMoreFlag = false;
   ListViewItemBuilder _itemBuilder;
+  GlobalKey<RefreshIndicatorState> _globalKey =
+      GlobalKey<RefreshIndicatorState>();
 
   @override
   void initState() {
     super.initState();
     _initItemBuilder();
+    _initState();
+    _initController();
+    _addListener();
+  }
 
+  @override
+  Widget build(BuildContext context) {
+    if (_state == null) {
+      return Container(
+        height: 0,
+      );
+    }
+    switch (_state) {
+      case _AutoRefreshListViewState.loadingFirstPage:
+        return widget.stateViewPresenter.loadingView();
+      case _AutoRefreshListViewState.errorOnLoadFirstPage:
+        return _buildLoadedErrorView();
+      case _AutoRefreshListViewState.emptyOnLoadFirstPage:
+        return widget.stateViewPresenter.emptyOnLoadView();
+      default:
+        return _buildListView();
+    }
+  }
+
+  _initState() {
     if (widget.immediateRefresh == true) {
-      _state = _RefreshListState.loadingFirstPage;
+      _state = _AutoRefreshListViewState.loadingFirstPage;
       _loadData(true);
     }
-    _addListener();
+  }
 
-    if (mounted) {
-      if (widget.controller != null) {
-        widget.controller._beginRefreshCallback = _refreshList;
-        widget.controller._scrollController = _listScrollController;
-      }
+  _initController() {
+    if (!mounted) return;
+    if (widget.controller != null) {
+      widget.controller._beginRefreshCallback = () {
+        if (_globalKey?.currentState == null) {
+          setState(() {
+            _state = _AutoRefreshListViewState.loadingFirstPage;
+          });
+          _loadData(true);
+        } else {
+          _globalKey.currentState.show();
+        }
+      };
+      widget.controller._reloadDataCallback = () => setState(() {});
+      widget.controller._scrollController = _listScrollController;
     }
   }
 
@@ -113,28 +164,6 @@ class _AutoRefreshListView extends State<AutoRefreshListView> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    if (_state == null) {
-      return Container(
-        height: 0,
-      );
-    }
-    switch (_state) {
-      case _RefreshListState.loadingFirstPage:
-        return widget.stateViewPresenter.loadingView();
-      case _RefreshListState.errorOnLoadFirstPage:
-        return _buildLoadedErrorView();
-      case _RefreshListState.emptyOnLoadFirstPage:
-        return widget.stateViewPresenter.emptyOnLoadView();
-      default:
-        return _buildListView();
-    }
-  }
-
-  /// 重新从第一页数据开始加载,然后刷新列表到结束
-  Future<void> _refreshList() async => await _loadData(true);
-
   _addListener() {
     _listScrollController.addListener(() {
       if (widget.canPullUp != true) return;
@@ -143,10 +172,11 @@ class _AutoRefreshListView extends State<AutoRefreshListView> {
       var pixel = _listScrollController.position.pixels;
 
       if (maxScroll == pixel &&
-          (_state == _RefreshListState.loadCompletedHasMoreData || _state == _RefreshListState.errorOnLoadMoreData) &&
+          (_state == _AutoRefreshListViewState.loadCompletedHasMoreData ||
+              _state == _AutoRefreshListViewState.errorOnLoadMoreData) &&
           !_loadingMoreFlag) {
         setState(() {
-          _state = _RefreshListState.loadingMoreData;
+          _state = _AutoRefreshListViewState.loadingMoreData;
         });
         _loadData(false);
       }
@@ -168,34 +198,33 @@ class _AutoRefreshListView extends State<AutoRefreshListView> {
         await widget.dataPresenter.fetchDataEntity();
     _loadingMoreFlag = false;
 
+    if (!mounted) return;
+
     setState(() {
-      if (data.success) {
+      if (data.success == true) {
         if (firstLoad) {
           widget.dataPresenter.clear();
         }
 
         if (widget.dataPresenter.isEmptyData(data)) {
           if (firstLoad) {
-            _state = _RefreshListState.emptyOnLoadFirstPage;
+            _state = _AutoRefreshListViewState.emptyOnLoadFirstPage;
           } else {
-            _state = _RefreshListState.loadCompletedNoMoreData;
+            _state = _AutoRefreshListViewState.loadCompletedNoMoreData;
           }
         } else if (widget.dataPresenter.isNoMoreData(data)) {
           widget.dataPresenter.addAll(data);
-          _state = _RefreshListState.loadCompletedNoMoreData;
-        }
-
-        /// 还有数据
-        else {
+          _state = _AutoRefreshListViewState.loadCompletedNoMoreData;
+        } else {
           widget.dataPresenter.addAll(data);
-          _state = _RefreshListState.loadCompletedHasMoreData;
+          _state = _AutoRefreshListViewState.loadCompletedHasMoreData;
         }
       } else {
         if (firstLoad) {
-          _state = _RefreshListState.errorOnLoadFirstPage;
+          _state = _AutoRefreshListViewState.errorOnLoadFirstPage;
         } else {
           widget.dataPresenter.previousPage();
-          _state = _RefreshListState.errorOnLoadMoreData;
+          _state = _AutoRefreshListViewState.errorOnLoadMoreData;
         }
       }
     });
@@ -208,68 +237,70 @@ class _AutoRefreshListView extends State<AutoRefreshListView> {
       controller: _listScrollController,
       shrinkWrap: true,
       padding: widget.padding,
+      physics: const AlwaysScrollableScrollPhysics(),
     );
-    return widget.canPullDown == true
-        ? RefreshIndicator(child: listView, onRefresh: _onRefresh)
-        : listView;
+    return Column(
+      children: <Widget>[
+        Expanded(
+            child: widget.canPullDown == true
+                ? RefreshIndicator(
+                    key: _globalKey,
+                    child: listView,
+                    onRefresh: _onRefresh,
+                    color: widget.refreshIndicatorColor,
+                    backgroundColor: widget.refreshIndicatorBackgroundColor,
+                  )
+                : listView)
+      ],
+    );
   }
 
   Widget _buildLoadedErrorView() {
     return widget.stateViewPresenter.errorOnLoadView(() {
       setState(() {
-        _state = _RefreshListState.loadingFirstPage;
+        _state = _AutoRefreshListViewState.loadingFirstPage;
       });
       _loadData(true);
     });
   }
 
   Widget _buildListFooterView(BuildContext ctx) {
-    Widget footerWidget;
     switch (_state) {
-      case _RefreshListState.loadCompletedNoMoreData:
-        footerWidget = widget.stateViewPresenter.noMoreCanLoadView();
-        break;
-      case _RefreshListState.loadCompletedHasMoreData:
-        footerWidget = widget.stateViewPresenter.pullUpLoadMoreView(() {
+      case _AutoRefreshListViewState.loadCompletedNoMoreData:
+        return widget.stateViewPresenter.noMoreCanLoadView();
+      case _AutoRefreshListViewState.loadCompletedHasMoreData:
+        return widget.stateViewPresenter.pullUpLoadMoreView(() {
           setState(() {
-            _state = _RefreshListState.loadingMoreData;
+            _state = _AutoRefreshListViewState.loadingMoreData;
           });
           _loadData(false);
         });
-        break;
-      case _RefreshListState.loadingMoreData:
-        footerWidget = widget.stateViewPresenter.loadingMoreView();
-        break;
-      case _RefreshListState.errorOnLoadFirstPage:
-        footerWidget = widget.stateViewPresenter.errorOnLoadView(() => _loadData(true));
-        break;
-      case _RefreshListState.errorOnLoadMoreData:
-        footerWidget = widget.stateViewPresenter.errorOnMoreView(() {
+      case _AutoRefreshListViewState.loadingMoreData:
+        return widget.stateViewPresenter.loadingMoreView();
+      case _AutoRefreshListViewState.errorOnLoadFirstPage:
+        return widget.stateViewPresenter.errorOnLoadView(() => _loadData(true));
+      case _AutoRefreshListViewState.errorOnLoadMoreData:
+        return widget.stateViewPresenter.errorOnMoreView(() {
           setState(() {
-            _state = _RefreshListState.loadingMoreData;
+            _state = _AutoRefreshListViewState.loadingMoreData;
           });
           _loadData(false);
         });
-        break;
       default:
-        footerWidget = Container(
-          height: 0,
-        );
-        break;
+        return Container(height: 0);
     }
-    return footerWidget;
   }
 
   Future<void> _onRefresh() async => _loadData(true);
 
   @override
   void dispose() {
-    super.dispose();
     _listScrollController.dispose();
+    super.dispose();
   }
 }
 
-enum _RefreshListState {
+enum _AutoRefreshListViewState {
   /// 第一次进入的时候正在加载数据
   loadingFirstPage,
 

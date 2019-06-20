@@ -18,7 +18,7 @@ dependencies:
 
 ### 介绍
 
-采用MVP设计模式,将AutoRefreshListView最大限度进行解耦.由3个Presenter组成,将数据处理、item的展示、状态视图展示分别由不同Presenter提供.
+采用MVP设计模式,将AutoRefreshListView最大限度进行解耦.由3个Presenter组成,将数据处理、item的展示、状态视图展示分别由不同Presenter提供实现.
 
 ```dart
 new AutoRefreshListView(

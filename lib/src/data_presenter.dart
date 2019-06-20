@@ -10,6 +10,8 @@ class RefreshListItemDataEntity {
 
   /// 额外字段信息
   dynamic extraData;
+
+  RefreshListItemDataEntity({this.success,this.entityList,this.extraData});
 }
 
 /// 数据Presenter,可继承,可with.
