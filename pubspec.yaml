@@ -1,6 +1,6 @@
 name: auto_refresh_list_view
 description: Flutter package,fully functional list auto refresh component,used MVP design mode.
-version: 0.8.0
+version: 0.9.0
 author: zohar <506902638@qq.com>
 homepage: https://github.com/zhahao/auto_refresh_list_view
 
@@ -10,7 +10,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  list_view_item_builder: ^0.7.0
+  list_view_item_builder: ^0.8.0
 
 dev_dependencies:
   flutter_test:

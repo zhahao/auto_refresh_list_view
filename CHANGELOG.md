@@ -14,3 +14,6 @@
 ## [0.8.0]
 * 修复'data.success'为null情况下的直接判断的bug.
 * 添加refreshIndicatorColor和refreshIndicatorBackgroundColor属性
+
+## [0.9.0]
+* 更新list_view_item_builder的依赖版本

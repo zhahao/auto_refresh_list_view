@@ -75,9 +75,11 @@ class AutoRefreshListView extends StatefulWidget {
     bool canPullUp,
     bool immediateRefresh,
     EdgeInsetsGeometry padding,
-  })  : assert(itemPresenter != null &&
-            dataPresenter != null &&
-            stateViewPresenter != null),
+  })  : assert(
+            itemPresenter != null &&
+                dataPresenter != null &&
+                stateViewPresenter != null,
+            "presenter 必须存在"),
         canPullDown = canPullDown ?? true,
         canPullUp = canPullUp ?? true,
         immediateRefresh = immediateRefresh ?? true,
