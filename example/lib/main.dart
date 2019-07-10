@@ -72,7 +72,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
 class RefreshListViewHomeDataPresenter extends RefreshListViewDataPresenter {
   @override
-  int pageSize = 10;
+  int pageSize = 5;
 
   @override
   Future<RefreshListItemDataEntity> fetchDataEntity() {
@@ -87,7 +87,7 @@ class RefreshListViewHomeDataPresenter extends RefreshListViewDataPresenter {
     }).then((_) {
       /// 随机模拟数据
       return RefreshListItemDataEntity()
-        ..success = Random().nextBool()
+        ..success = true
         ..entityList = _;
     });
   }

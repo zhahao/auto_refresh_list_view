@@ -23,9 +23,13 @@ class AutoRefreshListViewController {
   /// listView的控制器
   ScrollController get scrollController => _scrollController;
 
+  /// listViewItemBuilder,可以使用它的jumpTo和animateTo功能
+  ListViewItemBuilder get listViewItemBuilder => _listViewItemBuilder;
+
   VoidCallback _beginRefreshCallback;
   VoidCallback _reloadDataCallback;
   ScrollController _scrollController;
+  ListViewItemBuilder  _listViewItemBuilder;
 }
 
 class AutoRefreshListView extends StatefulWidget {
@@ -148,11 +152,13 @@ class _AutoRefreshListView extends State<AutoRefreshListView> {
       };
       widget.controller._reloadDataCallback = () => setState(() {});
       widget.controller._scrollController = _listScrollController;
+      widget.controller._listViewItemBuilder = _itemBuilder;
     }
   }
 
   _initItemBuilder() {
     _itemBuilder = ListViewItemBuilder(
+      scrollController: _listScrollController,
       sectionCountBuilder: widget.itemPresenter.sectionCount,
       rowCountBuilder: widget.itemPresenter.rowCount,
       itemsBuilder: widget.itemPresenter.items,
@@ -239,20 +245,38 @@ class _AutoRefreshListView extends State<AutoRefreshListView> {
       controller: _listScrollController,
       shrinkWrap: true,
       padding: widget.padding,
-      physics: const AlwaysScrollableScrollPhysics(),
+      physics: const BouncingScrollPhysics(),
     );
     return Column(
       children: <Widget>[
         Expanded(
             child: widget.canPullDown == true
-                ? RefreshIndicator(
-                    key: _globalKey,
-                    child: listView,
-                    onRefresh: _onRefresh,
-                    color: widget.refreshIndicatorColor,
-                    backgroundColor: widget.refreshIndicatorBackgroundColor,
-                  )
+                ? _buildPullToRefreshWidget(listView)
                 : listView)
+      ],
+    );
+  }
+
+  Widget _buildPullToRefreshWidget(ListView listView) {
+    return Stack(
+      fit: StackFit.expand,
+      children: <Widget>[
+        Positioned(
+          child: Container(
+            height: 50,
+            color: Colors.red,
+          ),
+          top: 0,
+          left: 0,
+          right: 0,
+        ),
+        Positioned(
+          child: listView,
+          left: 0,
+          right: 0,
+          top: 0,
+          bottom: 0,
+        )
       ],
     );
   }
@@ -292,8 +316,6 @@ class _AutoRefreshListView extends State<AutoRefreshListView> {
         return Container(height: 0);
     }
   }
-
-  Future<void> _onRefresh() async => _loadData(true);
 
   @override
   void dispose() {

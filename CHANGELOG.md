@@ -17,3 +17,6 @@
 
 ## [0.9.0]
 * 更新list_view_item_builder的依赖版本
+
+## [1.0.0]
+* 增加jumpTo和animateTo功能.
