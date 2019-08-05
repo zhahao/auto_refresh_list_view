@@ -61,7 +61,7 @@ class _MyHomePageState extends State<MyHomePage> {
       RefreshListViewHomeDataPresenter();
   RefreshListHomeStateViewPresenter _stateViewPresenter =
       RefreshListHomeStateViewPresenter();
-  QRefreshListViewController _listViewController = QRefreshListViewController();
+  AutoRefreshListViewController _listViewController = AutoRefreshListViewController();
 
   @override
   void initState() {

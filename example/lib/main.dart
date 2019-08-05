@@ -43,12 +43,13 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget _buildListView() {
+    /// 如果列表比较简单,可以把所有的presenter设置为this,然后实现对应方法即可
     return AutoRefreshListView(
       itemPresenter: _itemPresenter,
       dataPresenter: _dataPresenter,
       stateViewPresenter: _stateViewPresenter,
       controller: _listViewController,
-      refreshIndicatorColor: Colors.red,
+      refreshIndicatorColor: Colors.blue,
     );
   }
 
@@ -79,7 +80,9 @@ class RefreshListViewHomeDataPresenter extends RefreshListViewDataPresenter {
     /// mocked data
     return Future.delayed(Duration(seconds: 2)).then((_) {
       List titles = [];
-      var count = Random().nextBool() ? pageSize : (pageSize - 1);
+      var random = Random().nextInt(3);
+      /// 模拟数据足够、数据不足、无数据,概率各1/3
+      var count = random == 1 ? pageSize : (random == 2 ? pageSize - 1 : 0);
       for (int i = 0; i < count; i++) {
         titles.add(WordPair.random().asPascalCase);
       }
@@ -87,7 +90,7 @@ class RefreshListViewHomeDataPresenter extends RefreshListViewDataPresenter {
     }).then((_) {
       /// 随机模拟数据
       return RefreshListItemDataEntity()
-        ..success = true
+        ..success = Random().nextBool()
         ..entityList = _;
     });
   }

@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 /// listView的各种状态view的Presenter,可继承,可with.
 /// 默认提供实现类[RefreshListStateViewPresenter]
 abstract class RefreshListStateViewIPresenter {
+  /// context
+  BuildContext context;
+
   /// 正在加载数据
   Widget loadingView();
 
@@ -27,6 +30,9 @@ abstract class RefreshListStateViewIPresenter {
 }
 
 class RefreshListStateViewPresenter implements RefreshListStateViewIPresenter {
+  /// context
+  BuildContext context;
+
   /// 空数据文本
   String emptyOnLoadText = '暂无数据';
 

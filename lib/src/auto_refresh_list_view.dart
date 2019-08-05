@@ -29,7 +29,7 @@ class AutoRefreshListViewController {
   VoidCallback _beginRefreshCallback;
   VoidCallback _reloadDataCallback;
   ScrollController _scrollController;
-  ListViewItemBuilder  _listViewItemBuilder;
+  ListViewItemBuilder _listViewItemBuilder;
 }
 
 class AutoRefreshListView extends StatefulWidget {
@@ -106,7 +106,7 @@ class _AutoRefreshListView extends State<AutoRefreshListView> {
   void initState() {
     super.initState();
     _initItemBuilder();
-    _initState();
+    _initLoadState();
     _initController();
     _addListener();
   }
@@ -118,6 +118,7 @@ class _AutoRefreshListView extends State<AutoRefreshListView> {
         height: 0,
       );
     }
+    widget.stateViewPresenter.context = context;
     switch (_state) {
       case _AutoRefreshListViewState.loadingFirstPage:
         return widget.stateViewPresenter.loadingView();
@@ -130,7 +131,7 @@ class _AutoRefreshListView extends State<AutoRefreshListView> {
     }
   }
 
-  _initState() {
+  _initLoadState() {
     if (widget.immediateRefresh == true) {
       _state = _AutoRefreshListViewState.loadingFirstPage;
       _loadData(true);
@@ -245,41 +246,25 @@ class _AutoRefreshListView extends State<AutoRefreshListView> {
       controller: _listScrollController,
       shrinkWrap: true,
       padding: widget.padding,
-      physics: const BouncingScrollPhysics(),
+      physics: const AlwaysScrollableScrollPhysics(),
     );
     return Column(
       children: <Widget>[
         Expanded(
             child: widget.canPullDown == true
-                ? _buildPullToRefreshWidget(listView)
+                ? RefreshIndicator(
+                    key: _globalKey,
+                    child: listView,
+                    onRefresh: _onRefresh,
+                    color: widget.refreshIndicatorColor,
+                    backgroundColor: widget.refreshIndicatorBackgroundColor,
+                  )
                 : listView)
       ],
     );
   }
 
-  Widget _buildPullToRefreshWidget(ListView listView) {
-    return Stack(
-      fit: StackFit.expand,
-      children: <Widget>[
-        Positioned(
-          child: Container(
-            height: 50,
-            color: Colors.red,
-          ),
-          top: 0,
-          left: 0,
-          right: 0,
-        ),
-        Positioned(
-          child: listView,
-          left: 0,
-          right: 0,
-          top: 0,
-          bottom: 0,
-        )
-      ],
-    );
-  }
+  Future<void> _onRefresh() async => _loadData(true);
 
   Widget _buildLoadedErrorView() {
     return widget.stateViewPresenter.errorOnLoadView(() {
