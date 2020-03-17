@@ -235,7 +235,9 @@ class _AutoRefreshListView extends State<AutoRefreshListView> {
 
   _refreshCompleted() {
     _refreshController.refreshCompleted();
-    widget.controller?.headerRefreshCompleted();
+    if (widget.controller?.headerRefreshCompleted != null) {
+      widget.controller.headerRefreshCompleted();
+    }
   }
 
   Widget _buildListView() {
