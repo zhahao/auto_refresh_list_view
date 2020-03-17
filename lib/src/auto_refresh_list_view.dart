@@ -75,7 +75,7 @@ class AutoRefreshListView extends StatefulWidget {
     @required this.dataPresenter,
     @required this.stateViewPresenter,
     this.controller,
-    this.refreshHeader,
+    Widget refreshHeader,
     bool canPullDown,
     bool canPullUp,
     bool immediateRefresh,
@@ -85,6 +85,7 @@ class AutoRefreshListView extends StatefulWidget {
                 dataPresenter != null &&
                 stateViewPresenter != null,
             "presenter 必须存在"),
+        refreshHeader = refreshHeader ?? MaterialClassicHeader(),
         canPullDown = canPullDown ?? true,
         canPullUp = canPullUp ?? true,
         immediateRefresh = immediateRefresh ?? true,
@@ -257,7 +258,7 @@ class _AutoRefreshListView extends State<AutoRefreshListView> {
           onRefresh: _onRefresh,
           onLoading: _onLoading,
           scrollController: _listScrollController,
-          header: MaterialClassicHeader(),
+          header: widget.refreshHeader,
           footer: CustomFooter(
             builder: (BuildContext context, LoadStatus mode) {
               if (mode == LoadStatus.idle) {
