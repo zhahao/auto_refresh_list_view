@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:auto_refresh_list_view/auto_refresh_list_view.dart';
 import 'dart:async';
 import 'dart:math';
-import 'package:english_words/english_words.dart';
 
 void main() => runApp(MyApp());
 
@@ -31,10 +30,11 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   RefreshListViewHomeItemPresenter _itemPresenter;
   RefreshListViewHomeDataPresenter _dataPresenter =
-  RefreshListViewHomeDataPresenter();
+      RefreshListViewHomeDataPresenter();
   RefreshListHomeStateViewPresenter _stateViewPresenter =
-  RefreshListHomeStateViewPresenter();
-  AutoRefreshListViewController _listViewController = AutoRefreshListViewController();
+      RefreshListHomeStateViewPresenter();
+  AutoRefreshListViewController _listViewController =
+      AutoRefreshListViewController();
 
   @override
   void initState() {
@@ -79,7 +79,7 @@ class RefreshListViewHomeDataPresenter extends RefreshListViewDataPresenter {
     return Future.delayed(Duration(seconds: 2)).then((_) {
       List titles = [];
       for (int i = 0; i < pageSize; i++) {
-        titles.add(WordPair.random().asPascalCase);
+        titles.add(i.toString());
       }
       return titles;
     }).then((_) {
@@ -97,11 +97,7 @@ class RefreshListViewHomeItemPresenter extends RefreshListViewItemIPresenter {
 
   @override
   Widget items(BuildContext context, int section, int index) {
-    return Container(
-      alignment: Alignment.center,
-      child: Text(dataPresenter.entityList[index]),
-      height: 50,
-    );
+    return RefreshItem(text: dataPresenter.entityList[index],);
   }
 
   @override
@@ -112,8 +108,8 @@ class RefreshListViewHomeItemPresenter extends RefreshListViewItemIPresenter {
     showDialog(
         context: context,
         builder: (_) => AlertDialog(
-          title: Text(dataPresenter.entityList[index]),
-        ));
+              title: Text(dataPresenter.entityList[index]),
+            ));
   }
 }
 
@@ -137,4 +133,24 @@ class RefreshListHomeStateViewPresenter extends RefreshListStateViewPresenter {
     width: 160,
     height: 160,
   );
+}
+
+class RefreshItem extends StatefulWidget {
+  final String text;
+
+  RefreshItem({this.text});
+
+  @override
+  _RefreshItemState createState() => _RefreshItemState();
+}
+
+class _RefreshItemState extends State<RefreshItem> {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      alignment: Alignment.center,
+      child: Text(widget.text),
+      height: 50,
+    );
+  }
 }

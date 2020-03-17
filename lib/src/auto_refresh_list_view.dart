@@ -1,6 +1,8 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:list_view_item_builder/list_view_item_builder.dart';
+import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'data_presenter.dart';
 import 'item_presenter.dart';
 import 'state_view_presenter.dart';
@@ -61,20 +63,12 @@ class AutoRefreshListView extends StatefulWidget {
   /// 控制器,用来操作内部listView
   final AutoRefreshListViewController controller;
 
-  /// [RefreshIndicator.color]属性
-  final Color refreshIndicatorColor;
-
-  /// [RefreshIndicator.backgroundColor]属性
-  final Color refreshIndicatorBackgroundColor;
-
   AutoRefreshListView({
     Key key,
     @required this.itemPresenter,
     @required this.dataPresenter,
     @required this.stateViewPresenter,
     this.controller,
-    this.refreshIndicatorColor,
-    this.refreshIndicatorBackgroundColor,
     bool canPullDown,
     bool canPullUp,
     bool immediateRefresh,
@@ -97,10 +91,9 @@ class AutoRefreshListView extends StatefulWidget {
 class _AutoRefreshListView extends State<AutoRefreshListView> {
   _AutoRefreshListViewState _state;
   ScrollController _listScrollController = ScrollController();
-  bool _loadingMoreFlag = false;
   ListViewItemBuilder _itemBuilder;
-  GlobalKey<RefreshIndicatorState> _globalKey =
-      GlobalKey<RefreshIndicatorState>();
+  RefreshController _refreshController =
+      RefreshController(initialRefresh: false);
 
   @override
   void initState() {
@@ -108,7 +101,6 @@ class _AutoRefreshListView extends State<AutoRefreshListView> {
     _initItemBuilder();
     _initLoadState();
     _initController();
-    _addListener();
   }
 
   @override
@@ -134,7 +126,7 @@ class _AutoRefreshListView extends State<AutoRefreshListView> {
   _initLoadState() {
     if (widget.immediateRefresh == true) {
       _state = _AutoRefreshListViewState.loadingFirstPage;
-      _loadData(true);
+      _loadData(firstLoad: true, isHeader: true);
     }
   }
 
@@ -142,13 +134,12 @@ class _AutoRefreshListView extends State<AutoRefreshListView> {
     if (!mounted) return;
     if (widget.controller != null) {
       widget.controller._beginRefreshCallback = () {
-        if (_globalKey?.currentState == null) {
-          setState(() {
-            _state = _AutoRefreshListViewState.loadingFirstPage;
-          });
-          _loadData(true);
+        if (_state == _AutoRefreshListViewState.loadListViewData) {
+          _refreshController.requestRefresh();
         } else {
-          _globalKey.currentState.show();
+          setState(() {});
+          _state = _AutoRefreshListViewState.loadingFirstPage;
+          _loadData(firstLoad: true, isHeader: true);
         }
       };
       widget.controller._reloadDataCallback = () => setState(() {});
@@ -169,34 +160,10 @@ class _AutoRefreshListView extends State<AutoRefreshListView> {
       itemShouldTap: widget.itemPresenter.itemShouldTap,
       headerWidgetBuilder: widget.itemPresenter.headerWidget,
       footerWidgetBuilder: widget.itemPresenter.footerWidget,
-      loadMoreWidgetBuilder: _buildListFooterView,
     );
   }
 
-  _addListener() {
-    _listScrollController.addListener(() {
-      if (widget.canPullUp != true) return;
-
-      var maxScroll = _listScrollController.position.maxScrollExtent;
-      var pixel = _listScrollController.position.pixels;
-
-      if (maxScroll == pixel &&
-          (_state == _AutoRefreshListViewState.loadCompletedHasMoreData ||
-              _state == _AutoRefreshListViewState.errorOnLoadMoreData) &&
-          !_loadingMoreFlag) {
-        setState(() {
-          _state = _AutoRefreshListViewState.loadingMoreData;
-        });
-        _loadData(false);
-      }
-    });
-  }
-
-  Future<void> _loadData(bool firstLoad) async {
-    if (_loadingMoreFlag) return;
-
-    _loadingMoreFlag = true;
-
+  Future<void> _loadData({bool firstLoad, bool isHeader = true}) async {
     if (firstLoad) {
       widget.dataPresenter.resetPage();
     } else {
@@ -205,38 +172,59 @@ class _AutoRefreshListView extends State<AutoRefreshListView> {
 
     RefreshListItemDataEntity data =
         await widget.dataPresenter.fetchDataEntity();
-    _loadingMoreFlag = false;
 
     if (!mounted) return;
 
-    setState(() {
-      if (data.success == true) {
-        if (firstLoad) {
-          widget.dataPresenter.clear();
-        }
 
-        if (widget.dataPresenter.isEmptyData(data)) {
-          if (firstLoad) {
-            _state = _AutoRefreshListViewState.emptyOnLoadFirstPage;
-          } else {
-            _state = _AutoRefreshListViewState.loadCompletedNoMoreData;
-          }
-        } else if (widget.dataPresenter.isNoMoreData(data)) {
-          widget.dataPresenter.addAll(data);
-          _state = _AutoRefreshListViewState.loadCompletedNoMoreData;
+    if (data.success == true) {
+
+      if (firstLoad) {
+        widget.dataPresenter.clear();
+      }
+
+      if (widget.dataPresenter.isEmptyData(data)) {
+        if (firstLoad) {
+          _state = _AutoRefreshListViewState.emptyOnLoadFirstPage;
+        }
+        if (isHeader) {
+          _refreshController.refreshCompleted();
         } else {
-          widget.dataPresenter.addAll(data);
-          _state = _AutoRefreshListViewState.loadCompletedHasMoreData;
+          _refreshController.loadNoData();
+        }
+      } else if (widget.dataPresenter.isNoMoreData(data)) {
+        widget.dataPresenter.addAll(data);
+        if (firstLoad) {
+          _state = _AutoRefreshListViewState.loadListViewData;
+        }
+        if (isHeader) {
+          _refreshController.refreshCompleted();
+        } else {
+          _refreshController.loadNoData();
         }
       } else {
+        widget.dataPresenter.addAll(data);
+
         if (firstLoad) {
-          _state = _AutoRefreshListViewState.errorOnLoadFirstPage;
+          _state = _AutoRefreshListViewState.loadListViewData;
+          _refreshController.refreshCompleted();
+          _refreshController.loadComplete();
+        }
+        if (isHeader) {
+          _refreshController.refreshCompleted();
         } else {
-          widget.dataPresenter.previousPage();
-          _state = _AutoRefreshListViewState.errorOnLoadMoreData;
+          _refreshController.loadComplete();
         }
       }
-    });
+    } else {
+      if (firstLoad) {
+        _state = _AutoRefreshListViewState.errorOnLoadFirstPage;
+      } else {
+        widget.dataPresenter.previousPage();
+        _refreshController.loadFailed();
+        _refreshController.refreshCompleted();
+      }
+    }
+    setState(() {});
   }
 
   Widget _buildListView() {
@@ -251,55 +239,49 @@ class _AutoRefreshListView extends State<AutoRefreshListView> {
     return Column(
       children: <Widget>[
         Expanded(
-            child: widget.canPullDown == true
-                ? RefreshIndicator(
-                    key: _globalKey,
-                    child: listView,
-                    onRefresh: _onRefresh,
-                    color: widget.refreshIndicatorColor,
-                    backgroundColor: widget.refreshIndicatorBackgroundColor,
-                  )
-                : listView)
+            child: SmartRefresher(
+          controller: _refreshController,
+          enablePullUp: widget.canPullUp,
+          enablePullDown: widget.canPullDown,
+          child: listView,
+          onRefresh: _onRefresh,
+          onLoading: _onLoading,
+          scrollController: _listScrollController,
+          header: MaterialClassicHeader(),
+          footer: CustomFooter(
+            builder: (BuildContext context, LoadStatus mode) {
+              if (mode == LoadStatus.idle) {
+                return widget.stateViewPresenter.pullUpLoadMoreView(null);
+              } else if (mode == LoadStatus.loading) {
+                return widget.stateViewPresenter.loadingMoreView();
+              } else if (mode == LoadStatus.failed) {
+                return widget.stateViewPresenter.errorOnMoreView(() {
+                  _refreshController.requestLoading();
+                });
+              } else if (mode == LoadStatus.canLoading) {
+                return widget.stateViewPresenter.pullUpLoadMoreView(null);
+              } else {
+                return widget.stateViewPresenter.noMoreCanLoadView();
+              }
+            },
+          ),
+        )),
       ],
     );
   }
 
-  Future<void> _onRefresh() async => _loadData(true);
+  Future<void> _onRefresh() async => _loadData(firstLoad: true, isHeader: true);
+
+  Future<void> _onLoading() async =>
+      _loadData(firstLoad: false, isHeader: false);
 
   Widget _buildLoadedErrorView() {
     return widget.stateViewPresenter.errorOnLoadView(() {
       setState(() {
         _state = _AutoRefreshListViewState.loadingFirstPage;
       });
-      _loadData(true);
+      _loadData(firstLoad: true, isHeader: true);
     });
-  }
-
-  Widget _buildListFooterView(BuildContext ctx) {
-    switch (_state) {
-      case _AutoRefreshListViewState.loadCompletedNoMoreData:
-        return widget.stateViewPresenter.noMoreCanLoadView();
-      case _AutoRefreshListViewState.loadCompletedHasMoreData:
-        return widget.stateViewPresenter.pullUpLoadMoreView(() {
-          setState(() {
-            _state = _AutoRefreshListViewState.loadingMoreData;
-          });
-          _loadData(false);
-        });
-      case _AutoRefreshListViewState.loadingMoreData:
-        return widget.stateViewPresenter.loadingMoreView();
-      case _AutoRefreshListViewState.errorOnLoadFirstPage:
-        return widget.stateViewPresenter.errorOnLoadView(() => _loadData(true));
-      case _AutoRefreshListViewState.errorOnLoadMoreData:
-        return widget.stateViewPresenter.errorOnMoreView(() {
-          setState(() {
-            _state = _AutoRefreshListViewState.loadingMoreData;
-          });
-          _loadData(false);
-        });
-      default:
-        return Container(height: 0);
-    }
   }
 
   @override
@@ -319,15 +301,6 @@ enum _AutoRefreshListViewState {
   /// 第一次进入加载数据为空
   emptyOnLoadFirstPage,
 
-  /// 没有更多数据
-  loadCompletedNoMoreData,
-
-  /// 有更多数据
-  loadCompletedHasMoreData,
-
-  /// 加载更多时失败
-  errorOnLoadMoreData,
-
-  /// 正在加载更多
-  loadingMoreData,
+  /// list加载
+  loadListViewData,
 }

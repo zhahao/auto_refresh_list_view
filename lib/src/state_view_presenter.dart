@@ -162,15 +162,15 @@ class RefreshListStateViewPresenter implements RefreshListStateViewIPresenter {
   /// 加载更多时失败
   @override
   Widget errorOnMoreView(VoidCallback onPressed) =>
-      _loadMoreDataView(onPressed);
+      _loadMoreDataView(onPressed,"加载失败,点击重试");
 
-  Widget _loadMoreDataView(VoidCallback onPressed) {
+  Widget _loadMoreDataView(VoidCallback onPressed, [String text]) {
     return GestureDetector(
         onTap: onPressed,
         child: Container(
           height: 50,
           alignment: Alignment.center,
-          child: Text("点击或上拉加载更多"),
+          child: Text(text ?? "上拉加载更多"),
         ));
   }
 }
