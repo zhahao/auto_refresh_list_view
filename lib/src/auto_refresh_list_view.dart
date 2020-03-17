@@ -7,7 +7,7 @@ import 'data_presenter.dart';
 import 'item_presenter.dart';
 import 'state_view_presenter.dart';
 
-class AutoRefreshListViewController {
+class AutoRefreshListViewController with ChangeNotifier {
   /// 开始重新加载数据并刷新列表
   void beginRefresh() {
     if (_beginRefreshCallback != null) {
@@ -21,6 +21,9 @@ class AutoRefreshListViewController {
       _reloadDataCallback();
     }
   }
+
+  /// header刷新完成
+  VoidCallback headerRefreshCompleted;
 
   /// listView的控制器
   ScrollController get scrollController => _scrollController;
@@ -63,12 +66,16 @@ class AutoRefreshListView extends StatefulWidget {
   /// 控制器,用来操作内部listView
   final AutoRefreshListViewController controller;
 
+  /// 刷新头,默认[MaterialClassicHeader]
+  final Widget refreshHeader;
+
   AutoRefreshListView({
     Key key,
     @required this.itemPresenter,
     @required this.dataPresenter,
     @required this.stateViewPresenter,
     this.controller,
+    this.refreshHeader,
     bool canPullDown,
     bool canPullUp,
     bool immediateRefresh,
@@ -175,9 +182,7 @@ class _AutoRefreshListView extends State<AutoRefreshListView> {
 
     if (!mounted) return;
 
-
     if (data.success == true) {
-
       if (firstLoad) {
         widget.dataPresenter.clear();
       }
@@ -187,7 +192,7 @@ class _AutoRefreshListView extends State<AutoRefreshListView> {
           _state = _AutoRefreshListViewState.emptyOnLoadFirstPage;
         }
         if (isHeader) {
-          _refreshController.refreshCompleted();
+          _refreshCompleted();
         } else {
           _refreshController.loadNoData();
         }
@@ -197,7 +202,7 @@ class _AutoRefreshListView extends State<AutoRefreshListView> {
           _state = _AutoRefreshListViewState.loadListViewData;
         }
         if (isHeader) {
-          _refreshController.refreshCompleted();
+          _refreshCompleted();
         } else {
           _refreshController.loadNoData();
         }
@@ -206,11 +211,11 @@ class _AutoRefreshListView extends State<AutoRefreshListView> {
 
         if (firstLoad) {
           _state = _AutoRefreshListViewState.loadListViewData;
-          _refreshController.refreshCompleted();
+          _refreshCompleted();
           _refreshController.loadComplete();
         }
         if (isHeader) {
-          _refreshController.refreshCompleted();
+          _refreshCompleted();
         } else {
           _refreshController.loadComplete();
         }
@@ -221,10 +226,15 @@ class _AutoRefreshListView extends State<AutoRefreshListView> {
       } else {
         widget.dataPresenter.previousPage();
         _refreshController.loadFailed();
-        _refreshController.refreshCompleted();
+        _refreshCompleted();
       }
     }
     setState(() {});
+  }
+
+  _refreshCompleted() {
+    _refreshController.refreshCompleted();
+    widget.controller?.headerRefreshCompleted();
   }
 
   Widget _buildListView() {
