@@ -134,7 +134,7 @@ class _AutoRefreshListView extends State<AutoRefreshListView> {
   _initLoadState() {
     if (widget.immediateRefresh == true) {
       _state = _AutoRefreshListViewState.loadingFirstPage;
-      _loadData(firstLoad: true, isHeader: true);
+      _loadData(firstPageLoad: true, isHeader: true);
     }
   }
 
@@ -147,7 +147,7 @@ class _AutoRefreshListView extends State<AutoRefreshListView> {
         } else {
           setState(() {});
           _state = _AutoRefreshListViewState.loadingFirstPage;
-          _loadData(firstLoad: true, isHeader: true);
+          _loadData(firstPageLoad: true, isHeader: true);
         }
       };
       widget.controller._reloadDataCallback = () => setState(() {});
@@ -171,8 +171,8 @@ class _AutoRefreshListView extends State<AutoRefreshListView> {
     );
   }
 
-  Future<void> _loadData({bool firstLoad, bool isHeader = true}) async {
-    if (firstLoad) {
+  Future<void> _loadData({bool firstPageLoad, bool isHeader = true}) async {
+    if (firstPageLoad) {
       widget.dataPresenter.resetPage();
     } else {
       widget.dataPresenter.nextPage();
@@ -183,54 +183,58 @@ class _AutoRefreshListView extends State<AutoRefreshListView> {
 
     if (!mounted) return;
 
+    setState(() {});
+
     if (data.success == true) {
-      if (firstLoad) {
+      if (firstPageLoad || isHeader) {
         widget.dataPresenter.clear();
       }
 
       if (widget.dataPresenter.isEmptyData(data)) {
-        if (firstLoad) {
+        if (firstPageLoad) {
           _state = _AutoRefreshListViewState.emptyOnLoadFirstPage;
-        }
-        if (isHeader) {
-          _refreshCompleted();
+          _refreshController.loadNoData();
         } else {
+          _refreshCompleted();
           _refreshController.loadNoData();
         }
       } else if (widget.dataPresenter.isNoMoreData(data)) {
         widget.dataPresenter.addAll(data);
-        if (firstLoad) {
+        if (firstPageLoad) {
           _state = _AutoRefreshListViewState.loadListViewData;
-        }
-        if (isHeader) {
-          _refreshCompleted();
         } else {
-          _refreshController.loadNoData();
+          if (isHeader) {
+            _refreshCompleted();
+          }
         }
+        _refreshController.loadNoData();
       } else {
         widget.dataPresenter.addAll(data);
 
-        if (firstLoad) {
+        if (firstPageLoad) {
           _state = _AutoRefreshListViewState.loadListViewData;
           _refreshCompleted();
-          _refreshController.loadComplete();
+        } else {
+          if (isHeader) {
+            _refreshCompleted();
+          }
         }
+        _refreshController.loadComplete();
+      }
+    } else {
+      if (firstPageLoad || isHeader) {
+        _state = _AutoRefreshListViewState.errorOnLoadFirstPage;
+        _refreshController.loadNoData();
+        _refreshCompleted();
+      } else {
+        widget.dataPresenter.previousPage();
         if (isHeader) {
           _refreshCompleted();
         } else {
-          _refreshController.loadComplete();
+          _refreshController.loadFailed();
         }
       }
-    } else {
-      if (firstLoad) {
-        _state = _AutoRefreshListViewState.errorOnLoadFirstPage;
-      } else {
-        widget.dataPresenter.previousPage();
-        _refreshController.loadFailed();
-        _refreshCompleted();
-      }
     }
-    setState(() {});
   }
 
   _refreshCompleted() {
@@ -264,7 +268,7 @@ class _AutoRefreshListView extends State<AutoRefreshListView> {
           footer: CustomFooter(
             builder: (BuildContext context, LoadStatus mode) {
               if (mode == LoadStatus.idle) {
-                return widget.stateViewPresenter.pullUpLoadMoreView(null);
+                return Container();
               } else if (mode == LoadStatus.loading) {
                 return widget.stateViewPresenter.loadingMoreView();
               } else if (mode == LoadStatus.failed) {
@@ -283,17 +287,18 @@ class _AutoRefreshListView extends State<AutoRefreshListView> {
     );
   }
 
-  Future<void> _onRefresh() async => _loadData(firstLoad: true, isHeader: true);
+  Future<void> _onRefresh() async =>
+      _loadData(firstPageLoad: false, isHeader: true);
 
   Future<void> _onLoading() async =>
-      _loadData(firstLoad: false, isHeader: false);
+      _loadData(firstPageLoad: false, isHeader: false);
 
   Widget _buildLoadedErrorView() {
     return widget.stateViewPresenter.errorOnLoadView(() {
       setState(() {
         _state = _AutoRefreshListViewState.loadingFirstPage;
       });
-      _loadData(firstLoad: true, isHeader: true);
+      _loadData(firstPageLoad: true, isHeader: true);
     });
   }
 
