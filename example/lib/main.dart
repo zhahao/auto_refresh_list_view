@@ -81,7 +81,7 @@ class RefreshListViewHomeDataPresenter extends RefreshListViewDataPresenter {
       var random = Random().nextInt(3);
       /// 模拟数据足够、数据不足、无数据,概率各1/3
 //      var count = random == 1 ? pageSize : (random == 2 ? pageSize - 1 : 0);
-      var count = 20;
+      var count = 10;
 
       for (int i = 0; i < count; i++) {
         titles.add(i.toString());

@@ -172,7 +172,7 @@ class _AutoRefreshListView extends State<AutoRefreshListView> {
   }
 
   Future<void> _loadData({bool firstPageLoad, bool isHeader = true}) async {
-    if (firstPageLoad) {
+    if (firstPageLoad || isHeader) {
       widget.dataPresenter.resetPage();
     } else {
       widget.dataPresenter.nextPage();
