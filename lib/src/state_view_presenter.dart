@@ -135,8 +135,12 @@ class RefreshListStateViewPresenter implements RefreshListStateViewIPresenter {
   @override
   Widget noMoreCanLoadView() {
     return Container(
-      height: 0,
-        );
+        child: Padding(
+      padding: const EdgeInsets.all(18.0),
+      child: Center(
+        child: Text("已经全部加载完毕"),
+      ),
+    ));
   }
 
   Widget _emptyDataSetView(Widget imageWidget, Widget bottomWidget,
