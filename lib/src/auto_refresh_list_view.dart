@@ -7,7 +7,7 @@ import 'data_presenter.dart';
 import 'item_presenter.dart';
 import 'state_view_presenter.dart';
 
-class AutoRefreshListViewController with ChangeNotifier {
+class AutoRefreshListViewController {
   /// 开始重新加载数据并刷新列表
   void beginRefresh() {
     if (_beginRefreshCallback != null) {
@@ -195,7 +195,7 @@ class _AutoRefreshListView extends State<AutoRefreshListView> {
         if (isHeader) {
           _refreshCompleted();
         } else {
-          _refreshController.loadNoData();
+          _refreshController.resetNoData();
         }
       } else if (widget.dataPresenter.isNoMoreData(data)) {
         widget.dataPresenter.addAll(data);
@@ -205,7 +205,7 @@ class _AutoRefreshListView extends State<AutoRefreshListView> {
         if (isHeader) {
           _refreshCompleted();
         } else {
-          _refreshController.loadNoData();
+          _refreshController.resetNoData();
         }
       } else {
         widget.dataPresenter.addAll(data);
