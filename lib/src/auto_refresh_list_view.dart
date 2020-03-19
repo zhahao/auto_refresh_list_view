@@ -191,13 +191,11 @@ class _AutoRefreshListView extends State<AutoRefreshListView> {
       }
 
       if (widget.dataPresenter.isEmptyData(data)) {
-        if (firstPageLoad) {
+        if (firstPageLoad || isHeader) {
           _state = _AutoRefreshListViewState.emptyOnLoadFirstPage;
-          _refreshController.loadNoData();
-        } else {
-          _refreshCompleted();
-          _refreshController.loadNoData();
         }
+        _refreshCompleted();
+        _refreshController.loadNoData();
       } else if (widget.dataPresenter.isNoMoreData(data)) {
         widget.dataPresenter.addAll(data);
         if (firstPageLoad) {
