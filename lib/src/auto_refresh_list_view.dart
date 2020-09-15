@@ -178,8 +178,13 @@ class _AutoRefreshListView extends State<AutoRefreshListView> {
       widget.dataPresenter.nextPage();
     }
 
-    RefreshListItemDataEntity data =
-        await widget.dataPresenter.fetchDataEntity();
+    RefreshListItemDataEntity data;
+    try {
+      data = await widget.dataPresenter.fetchDataEntity();
+    }catch (e) {
+      data = RefreshListItemDataEntity(success: false);
+      print('RefreshListView获取数据时发生异常: ${e.toString()}');
+    }
 
     if (!mounted) return;
 
