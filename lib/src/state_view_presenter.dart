@@ -27,6 +27,9 @@ abstract class RefreshListStateViewIPresenter {
 
   /// 没有更多数据
   Widget noMoreCanLoadView();
+
+  /// 自定义listView
+  Widget customListView();
 }
 
 class RefreshListStateViewPresenter implements RefreshListStateViewIPresenter {
@@ -49,7 +52,7 @@ class RefreshListStateViewPresenter implements RefreshListStateViewIPresenter {
   @override
   Widget loadingView() {
     return Container(
-      color: Colors.white,
+      color: Colors.transparent,
       child: Center(
         child: CupertinoActivityIndicator(
           animating: true,
@@ -173,4 +176,7 @@ class RefreshListStateViewPresenter implements RefreshListStateViewIPresenter {
           child: Text(text ?? "上拉加载更多"),
         ));
   }
+
+  @override
+  Widget customListView() => null;
 }

@@ -13,7 +13,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: MyHomePage(title: 'example_auto_refresh_list_view'),
+      home: MyHomePage(title: '\n\nexample_auto_refresh_list_view'),
     );
   }
 }
@@ -33,12 +33,33 @@ class _MyHomePageState extends State<MyHomePage> {
       RefreshListViewHomeDataPresenter();
   RefreshListHomeStateViewPresenter _stateViewPresenter =
       RefreshListHomeStateViewPresenter();
-  AutoRefreshListViewController _listViewController = AutoRefreshListViewController();
+  AutoRefreshListViewController _listViewController =
+      AutoRefreshListViewController();
+  double _sliderTop = 0;
+  final _imageHeight = 200.0;
+  final _sliderHeight = 50.0;
+  bool _isTop = false;
 
   @override
   void initState() {
     super.initState();
+
+    _sliderTop = _imageHeight - _sliderHeight;
+    final maxSliderTop = _imageHeight - _sliderHeight;
     _itemPresenter = RefreshListViewHomeItemPresenter(_dataPresenter);
+    Future.delayed(Duration(seconds: 1), () {
+      _listViewController.scrollController.addListener(() {
+        final offset = _listViewController.scrollController.offset;
+        if (offset > _imageHeight - _sliderHeight) {
+          _sliderTop = 0;
+        } else {
+          _sliderTop = _imageHeight - _sliderHeight - offset;
+        }
+        _sliderTop = min(_sliderTop, maxSliderTop);
+        _isTop = _sliderTop == 0;
+        setState(() {});
+      });
+    });
   }
 
   Widget _buildListView() {
@@ -51,20 +72,21 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
+  _buildAppBar() {
+    return AppBar(
+      title: Text('listView'),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-        actions: <Widget>[
-          IconButton(
-              icon: Icon(Icons.refresh),
-              onPressed: () {
-                _listViewController.beginRefresh();
-              })
+      body: Column(
+        children: <Widget>[
+          _buildAppBar(),
+          Flexible(child: _buildListView()),
         ],
       ),
-      body: _buildListView(),
     );
   }
 }
@@ -78,10 +100,11 @@ class RefreshListViewHomeDataPresenter extends RefreshListViewDataPresenter {
     /// mocked data
     return Future.delayed(Duration(seconds: 2)).then((_) {
       List titles = [];
-      var random = Random().nextInt(3);
+      var random = Random().nextInt(2);
+
       /// 模拟数据足够、数据不足、无数据,概率各1/3
-//      var count = random == 1 ? pageSize : (random == 2 ? pageSize - 1 : 0);
-      var count = 0;
+      // var count = random == 1 ? pageSize : (random == 2 ? pageSize - 1 : 0);
+      var count = 110;
 
       for (int i = 0; i < count; i++) {
         titles.add(i.toString());
@@ -103,8 +126,9 @@ class RefreshListViewHomeItemPresenter extends RefreshListViewItemIPresenter {
 
   @override
   Widget items(BuildContext context, int section, int index) {
-    return RefreshItem(text: dataPresenter.entityList[index],);
-
+    return RefreshItem(
+      text: dataPresenter.entityList[index],
+    );
   }
 
   @override
@@ -117,6 +141,14 @@ class RefreshListViewHomeItemPresenter extends RefreshListViewItemIPresenter {
         builder: (_) => AlertDialog(
               title: Text(dataPresenter.entityList[index]),
             ));
+  }
+
+  @override
+  Widget headerWidget(BuildContext context) {
+    return Container(
+      height: 200,
+      color: Colors.transparent,
+    );
   }
 }
 
@@ -140,8 +172,13 @@ class RefreshListHomeStateViewPresenter extends RefreshListStateViewPresenter {
     width: 160,
     height: 160,
   );
-}
 
+  @override
+  Widget customListView() {
+    // TODO: implement customListView
+    return Text('customListView');
+  }
+}
 
 class RefreshItem extends StatefulWidget {
   final String text;
@@ -160,6 +197,7 @@ class _RefreshItemState extends State<RefreshItem> {
       alignment: Alignment.center,
       child: Text(widget.text),
       height: 50,
+      color: Colors.white,
     );
   }
 }

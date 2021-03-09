@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:list_view_item_builder/list_view_item_builder.dart';
@@ -181,9 +182,11 @@ class _AutoRefreshListView extends State<AutoRefreshListView> {
     RefreshListItemDataEntity data;
     try {
       data = await widget.dataPresenter.fetchDataEntity();
-    }catch (e) {
+    } catch (e) {
       data = RefreshListItemDataEntity(success: false);
-      print('RefreshListView获取数据时发生异常: ${e.toString()}');
+      if (kDebugMode) {
+        print('RefreshListView获取数据时发生异常: ${e.toString()}');
+      }
     }
 
     if (!mounted) return;
@@ -248,6 +251,9 @@ class _AutoRefreshListView extends State<AutoRefreshListView> {
   }
 
   Widget _buildListView() {
+    final customListView = widget.stateViewPresenter.customListView();
+    if (customListView != null) return customListView;
+
     var listView = ListView.builder(
       itemBuilder: _itemBuilder.itemBuilder,
       itemCount: _itemBuilder.itemCount,
