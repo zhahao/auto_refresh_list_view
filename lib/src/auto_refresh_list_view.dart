@@ -105,6 +105,8 @@ class _AutoRefreshListView extends State<AutoRefreshListView> {
   RefreshController _refreshController =
       RefreshController(initialRefresh: false);
 
+  get _scrollController => widget.controller?.scrollController;
+  
   @override
   void initState() {
     super.initState();
@@ -159,7 +161,7 @@ class _AutoRefreshListView extends State<AutoRefreshListView> {
 
   _initItemBuilder() {
     _itemBuilder = ListViewItemBuilder(
-      scrollController: widget.controller.scrollController,
+      scrollController: _scrollController,
       sectionCountBuilder: widget.itemPresenter.sectionCount,
       rowCountBuilder: widget.itemPresenter.rowCount,
       itemsBuilder: widget.itemPresenter.items,
@@ -257,7 +259,7 @@ class _AutoRefreshListView extends State<AutoRefreshListView> {
     var listView = ListView.builder(
       itemBuilder: _itemBuilder.itemBuilder,
       itemCount: _itemBuilder.itemCount,
-      controller: widget.controller.scrollController,
+      controller: _scrollController,
       shrinkWrap: true,
       padding: widget.padding,
       physics: const AlwaysScrollableScrollPhysics(),
@@ -272,7 +274,7 @@ class _AutoRefreshListView extends State<AutoRefreshListView> {
           child: listView,
           onRefresh: _onRefresh,
           onLoading: _onLoading,
-          scrollController: widget.controller.scrollController,
+          scrollController: _scrollController,
           header: widget.refreshHeader,
           footer: CustomFooter(
             builder: (BuildContext context, LoadStatus mode) {
