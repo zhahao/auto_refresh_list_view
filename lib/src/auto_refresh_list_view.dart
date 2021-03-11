@@ -9,6 +9,9 @@ import 'item_presenter.dart';
 import 'state_view_presenter.dart';
 
 class AutoRefreshListViewController with ChangeNotifier {
+
+  AutoRefreshListViewController({this.scrollController});
+
   /// 开始重新加载数据并刷新列表
   void beginRefresh() {
     if (_beginRefreshCallback != null) {
@@ -27,14 +30,13 @@ class AutoRefreshListViewController with ChangeNotifier {
   VoidCallback headerRefreshCompleted;
 
   /// listView的控制器
-  ScrollController get scrollController => _scrollController;
+  ScrollController scrollController;
 
   /// listViewItemBuilder,可以使用它的jumpTo和animateTo功能
   ListViewItemBuilder get listViewItemBuilder => _listViewItemBuilder;
 
   VoidCallback _beginRefreshCallback;
   VoidCallback _reloadDataCallback;
-  ScrollController _scrollController;
   ListViewItemBuilder _listViewItemBuilder;
 }
 
@@ -99,7 +101,6 @@ class AutoRefreshListView extends StatefulWidget {
 
 class _AutoRefreshListView extends State<AutoRefreshListView> {
   _AutoRefreshListViewState _state;
-  ScrollController _listScrollController = ScrollController();
   ListViewItemBuilder _itemBuilder;
   RefreshController _refreshController =
       RefreshController(initialRefresh: false);
@@ -152,14 +153,13 @@ class _AutoRefreshListView extends State<AutoRefreshListView> {
         }
       };
       widget.controller._reloadDataCallback = () => setState(() {});
-      widget.controller._scrollController = _listScrollController;
       widget.controller._listViewItemBuilder = _itemBuilder;
     }
   }
 
   _initItemBuilder() {
     _itemBuilder = ListViewItemBuilder(
-      scrollController: _listScrollController,
+      scrollController: widget.controller.scrollController,
       sectionCountBuilder: widget.itemPresenter.sectionCount,
       rowCountBuilder: widget.itemPresenter.rowCount,
       itemsBuilder: widget.itemPresenter.items,
@@ -257,7 +257,7 @@ class _AutoRefreshListView extends State<AutoRefreshListView> {
     var listView = ListView.builder(
       itemBuilder: _itemBuilder.itemBuilder,
       itemCount: _itemBuilder.itemCount,
-      controller: _listScrollController,
+      controller: widget.controller.scrollController,
       shrinkWrap: true,
       padding: widget.padding,
       physics: const AlwaysScrollableScrollPhysics(),
@@ -272,7 +272,7 @@ class _AutoRefreshListView extends State<AutoRefreshListView> {
           child: listView,
           onRefresh: _onRefresh,
           onLoading: _onLoading,
-          scrollController: _listScrollController,
+          scrollController: widget.controller.scrollController,
           header: widget.refreshHeader,
           footer: CustomFooter(
             builder: (BuildContext context, LoadStatus mode) {
@@ -313,7 +313,6 @@ class _AutoRefreshListView extends State<AutoRefreshListView> {
 
   @override
   void dispose() {
-    _listScrollController.dispose();
     super.dispose();
   }
 }

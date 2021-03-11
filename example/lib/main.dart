@@ -91,7 +91,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
-class RefreshListViewHomeDataPresenter extends RefreshListViewDataPresenter {
+class RefreshListViewHomeDataPresenter extends RefreshListViewDataPresenter<String> {
   @override
   int pageSize = 20;
 
@@ -99,7 +99,7 @@ class RefreshListViewHomeDataPresenter extends RefreshListViewDataPresenter {
   Future<RefreshListItemDataEntity> fetchDataEntity() {
     /// mocked data
     return Future.delayed(Duration(seconds: 2)).then((_) {
-      List titles = [];
+      List titles = <String>[];
       var random = Random().nextInt(2);
 
       /// 模拟数据足够、数据不足、无数据,概率各1/3
@@ -176,7 +176,7 @@ class RefreshListHomeStateViewPresenter extends RefreshListStateViewPresenter {
   @override
   Widget customListView() {
     // TODO: implement customListView
-    return Text('customListView');
+    return null;
   }
 }
 

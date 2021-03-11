@@ -44,13 +44,13 @@ abstract class RefreshListViewDataIPresenter {
 
 
 /// 默认的dataPresenter
-class RefreshListViewDataPresenter implements RefreshListViewDataIPresenter {
+class RefreshListViewDataPresenter<T> implements RefreshListViewDataIPresenter {
   int pageSize = 20;
 
   int pageNum = 1;
 
   /// 提供一个默认的list,可以不使用
-  List entityList = [];
+  List<T> entityList = <T>[];
 
   /// 获取数据
   Future<RefreshListItemDataEntity> fetchDataEntity() => null;
@@ -59,12 +59,13 @@ class RefreshListViewDataPresenter implements RefreshListViewDataIPresenter {
   @override
   void clear() => entityList.clear();
 
+
   /// 添加新数据数组,根据需求可重写
   /// 每次调用fetchDataEntity,获取到了新的RefreshListItemDataEntity.entityList之后,默认会添加到this.entityList里面
   @override
   void addAll(RefreshListItemDataEntity fetchedData) {
     if (fetchedData?.entityList != null) {
-      entityList.addAll(fetchedData.entityList);
+      entityList.addAll(fetchedData.entityList as List<T>);
     }
   }
 
