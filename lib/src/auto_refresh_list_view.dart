@@ -104,7 +104,8 @@ class _AutoRefreshListView extends State<AutoRefreshListView> {
   ListViewItemBuilder _itemBuilder;
   RefreshController _refreshController =
       RefreshController(initialRefresh: false);
-
+  /// 是否使用了自定义的ListView
+  bool _usedCustomListView = false;
   get _scrollController => widget.controller?.scrollController;
   
   @override
@@ -146,7 +147,7 @@ class _AutoRefreshListView extends State<AutoRefreshListView> {
     if (!mounted) return;
     if (widget.controller != null) {
       widget.controller._beginRefreshCallback = () {
-        if (_state == _AutoRefreshListViewState.loadListViewData) {
+        if (_state == _AutoRefreshListViewState.loadListViewData && !_usedCustomListView) {
           _refreshController.requestRefresh();
         } else {
           setState(() {});
@@ -184,10 +185,10 @@ class _AutoRefreshListView extends State<AutoRefreshListView> {
     RefreshListItemDataEntity data;
     try {
       data = await widget.dataPresenter.fetchDataEntity();
-    } catch (e) {
+    } catch (e,f) {
       data = RefreshListItemDataEntity(success: false);
       if (kDebugMode) {
-        print('RefreshListView获取数据时发生异常: ${e.toString()}');
+        print('RefreshListView获取数据时发生异常: ${e.toString()}\n${f.toString()}');
       }
     }
 
@@ -254,7 +255,10 @@ class _AutoRefreshListView extends State<AutoRefreshListView> {
 
   Widget _buildListView() {
     final customListView = widget.stateViewPresenter.customListView();
-    if (customListView != null) return customListView;
+    if (customListView != null) {
+      _usedCustomListView = true;
+      return customListView;
+    }
 
     var listView = ListView.builder(
       itemBuilder: _itemBuilder.itemBuilder,
