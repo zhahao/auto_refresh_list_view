@@ -9,13 +9,19 @@ import 'item_presenter.dart';
 import 'state_view_presenter.dart';
 
 class AutoRefreshListViewController with ChangeNotifier {
-
   AutoRefreshListViewController({this.scrollController});
 
   /// 开始重新加载数据并刷新列表
   void beginRefresh() {
     if (_beginRefreshCallback != null) {
       _beginRefreshCallback();
+    }
+  }
+
+  /// 强制刷新,状态变成转圈圈
+  void forceRefresh() {
+    if (_forceRefreshCallback != null) {
+      _forceRefreshCallback();
     }
   }
 
@@ -37,6 +43,7 @@ class AutoRefreshListViewController with ChangeNotifier {
 
   VoidCallback _beginRefreshCallback;
   VoidCallback _reloadDataCallback;
+  VoidCallback _forceRefreshCallback;
   ListViewItemBuilder _listViewItemBuilder;
 }
 
@@ -104,10 +111,12 @@ class _AutoRefreshListView extends State<AutoRefreshListView> {
   ListViewItemBuilder _itemBuilder;
   RefreshController _refreshController =
       RefreshController(initialRefresh: false);
+
   /// 是否使用了自定义的ListView
   bool _usedCustomListView = false;
+
   get _scrollController => widget.controller?.scrollController;
-  
+
   @override
   void initState() {
     super.initState();
@@ -146,15 +155,21 @@ class _AutoRefreshListView extends State<AutoRefreshListView> {
   _initController() {
     if (!mounted) return;
     if (widget.controller != null) {
+      widget.controller._forceRefreshCallback = () {
+        setState(() {});
+        _state = _AutoRefreshListViewState.loadingFirstPage;
+        _loadData(firstPageLoad: true, isHeader: true);
+      };
+
       widget.controller._beginRefreshCallback = () {
-        if (_state == _AutoRefreshListViewState.loadListViewData && !_usedCustomListView) {
+        if (_state == _AutoRefreshListViewState.loadListViewData &&
+            !_usedCustomListView) {
           _refreshController.requestRefresh();
         } else {
-          setState(() {});
-          _state = _AutoRefreshListViewState.loadingFirstPage;
-          _loadData(firstPageLoad: true, isHeader: true);
+          widget.controller._forceRefreshCallback();
         }
       };
+
       widget.controller._reloadDataCallback = () => setState(() {});
       widget.controller._listViewItemBuilder = _itemBuilder;
     }
@@ -185,7 +200,7 @@ class _AutoRefreshListView extends State<AutoRefreshListView> {
     RefreshListItemDataEntity data;
     try {
       data = await widget.dataPresenter.fetchDataEntity();
-    } catch (e,f) {
+    } catch (e, f) {
       data = RefreshListItemDataEntity(success: false);
       if (kDebugMode) {
         print('RefreshListView获取数据时发生异常: ${e.toString()}\n${f.toString()}');

@@ -44,22 +44,22 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     super.initState();
 
-    _sliderTop = _imageHeight - _sliderHeight;
-    final maxSliderTop = _imageHeight - _sliderHeight;
-    _itemPresenter = RefreshListViewHomeItemPresenter(_dataPresenter);
-    Future.delayed(Duration(seconds: 1), () {
-      _listViewController.scrollController.addListener(() {
-        final offset = _listViewController.scrollController.offset;
-        if (offset > _imageHeight - _sliderHeight) {
-          _sliderTop = 0;
-        } else {
-          _sliderTop = _imageHeight - _sliderHeight - offset;
-        }
-        _sliderTop = min(_sliderTop, maxSliderTop);
-        _isTop = _sliderTop == 0;
-        setState(() {});
-      });
-    });
+    // _sliderTop = _imageHeight - _sliderHeight;
+    // final maxSliderTop = _imageHeight - _sliderHeight;
+    // _itemPresenter = RefreshListViewHomeItemPresenter(_dataPresenter);
+    // Future.delayed(Duration(seconds: 1), () {
+    //   _listViewController.scrollController.addListener(() {
+    //     final offset = _listViewController.scrollController.offset;
+    //     if (offset > _imageHeight - _sliderHeight) {
+    //       _sliderTop = 0;
+    //     } else {
+    //       _sliderTop = _imageHeight - _sliderHeight - offset;
+    //     }
+    //     _sliderTop = min(_sliderTop, maxSliderTop);
+    //     _isTop = _sliderTop == 0;
+    //     setState(() {});
+    //   });
+    // });
   }
 
   Widget _buildListView() {
@@ -75,6 +75,14 @@ class _MyHomePageState extends State<MyHomePage> {
   _buildAppBar() {
     return AppBar(
       title: Text('listView'),
+      actions: <Widget>[
+        GestureDetector(
+          child: Text('data'),
+          onTap: (){
+            _listViewController.beginRefresh();
+          },
+        )
+      ],
     );
   }
 
@@ -109,6 +117,7 @@ class RefreshListViewHomeDataPresenter extends RefreshListViewDataPresenter<Stri
       for (int i = 0; i < count; i++) {
         titles.add(i.toString());
       }
+      print('${titles[122].toString()}');
       return titles;
     }).then((_) {
       /// 随机模拟数据
@@ -176,7 +185,9 @@ class RefreshListHomeStateViewPresenter extends RefreshListStateViewPresenter {
   @override
   Widget customListView() {
     // TODO: implement customListView
-    return null;
+    return Container(
+      child: Text("2222"),
+    );
   }
 }
 
