@@ -156,6 +156,7 @@ class _AutoRefreshListView extends State<AutoRefreshListView> {
     if (!mounted) return;
     if (widget.controller != null) {
       widget.controller._forceRefreshCallback = () {
+        if (!mounted) return;
         setState(() {});
         _state = _AutoRefreshListViewState.loadingFirstPage;
         _loadData(firstPageLoad: true, isHeader: true);
@@ -170,7 +171,11 @@ class _AutoRefreshListView extends State<AutoRefreshListView> {
         }
       };
 
-      widget.controller._reloadDataCallback = () => setState(() {});
+      widget.controller._reloadDataCallback = () {
+        if (mounted) {
+          setState(() {});
+        }
+      };
       widget.controller._listViewItemBuilder = _itemBuilder;
     }
   }
@@ -325,9 +330,11 @@ class _AutoRefreshListView extends State<AutoRefreshListView> {
 
   Widget _buildLoadedErrorView() {
     return widget.stateViewPresenter.errorOnLoadView(() {
-      setState(() {
-        _state = _AutoRefreshListViewState.loadingFirstPage;
-      });
+      if (mounted) {
+        setState(() {
+          _state = _AutoRefreshListViewState.loadingFirstPage;
+        });
+      }
       _loadData(firstPageLoad: true, isHeader: true);
     });
   }
